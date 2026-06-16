@@ -3,6 +3,7 @@ package com.opd.opd_ai_system.entity;
 import jakarta.persistence.*;
         import lombok.*;
 
+
 @Entity
 @Table(name = "patients")
 @Getter
