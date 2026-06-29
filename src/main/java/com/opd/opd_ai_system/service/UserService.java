@@ -15,36 +15,24 @@ public class UserService {
     @Autowired
     UserRepository userRepository;
 
-    public LoginResponse login(LoginRequest request){
+    public LoginResponse login(LoginRequest request) {
 
-        User user=userRepository
-                .findByEmail(request.getEmail())
-                .orElse(null);
+        User user = userRepository
+                .findByEmailAndRole(
+                        request.getEmail(),
+                        request.getRole())
+                .orElseThrow(() ->
+                        new RuntimeException("Invalid credentials"));
 
-        if(user==null){
-
-            return new LoginResponse(
-                    "User not found",
-                    null
-            );
-
+        if (!user.getPassword().equals(request.getPassword())) {
+            throw new RuntimeException("Invalid credentials");
         }
 
-        if(!user.getPassword()
-                .equals(request.getPassword())){
+        LoginResponse response = new LoginResponse();
+        response.setMessage("Login Successful");
+        response.setRole(user.getRole());
 
-            return new LoginResponse(
-                    "Wrong password",
-                    null
-            );
-
-        }
-
-        return new LoginResponse(
-                "Login Successful",
-                user.getRole()
-        );
-
+        return response;
     }
 
 }
