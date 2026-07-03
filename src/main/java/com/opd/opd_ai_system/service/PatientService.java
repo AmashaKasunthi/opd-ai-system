@@ -60,4 +60,8 @@ public class PatientService {
 
         return "Patient not found";
     }
+
+    public List<Patient> getRecentPatients() {
+        return patientRepository.findTop5ByOrderByCreatedAtDesc();
+    }
 }

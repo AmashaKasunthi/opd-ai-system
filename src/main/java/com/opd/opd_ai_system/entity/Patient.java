@@ -2,7 +2,7 @@ package com.opd.opd_ai_system.entity;
 
 import jakarta.persistence.*;
         import lombok.*;
-
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "patients")
@@ -27,4 +27,11 @@ public class Patient {
     private String contactNumber;
 
     private String address;
+
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
 }

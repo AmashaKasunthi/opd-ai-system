@@ -48,4 +48,9 @@ public class PatientController {
     public String deletePatient(@PathVariable Integer id) {
         return patientService.deletePatient(id);
     }
+
+    @GetMapping("/recent")
+    public List<Patient> getRecentPatients() {
+        return patientService.getRecentPatients();
+    }
 }
