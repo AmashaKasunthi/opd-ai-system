@@ -36,6 +36,7 @@ public class PatientService {
         Patient patient = patientRepository.findById(id).orElse(null);
 
         if (patient != null) {
+            patient.setPatientNum(patientDetails.getPatientNum());
             patient.setFullName(patientDetails.getFullName());
             patient.setAge(patientDetails.getAge());
             patient.setGender(patientDetails.getGender());
