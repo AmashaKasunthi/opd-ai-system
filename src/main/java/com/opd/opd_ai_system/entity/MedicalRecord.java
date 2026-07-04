@@ -32,7 +32,7 @@ public class MedicalRecord {
 
     private Integer heartRate;
 
-    private String diagnosis;
+    private String notes;
 
-    private String riskLevel;
+    private Integer weight;
 }

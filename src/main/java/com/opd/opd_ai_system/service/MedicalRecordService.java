@@ -67,8 +67,8 @@ public class MedicalRecordService {
             record.setBloodPressure(updatedRecord.getBloodPressure());
             record.setTemperature(updatedRecord.getTemperature());
             record.setHeartRate(updatedRecord.getHeartRate());
-            record.setDiagnosis(updatedRecord.getDiagnosis());
-            record.setRiskLevel(updatedRecord.getRiskLevel());
+            record.setNotes(updatedRecord.getNotes());
+            record.setWeight(updatedRecord.getWeight());
 
             return medicalRecordRepository.save(record);
         }
