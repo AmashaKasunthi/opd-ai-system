@@ -56,7 +56,7 @@ public class MedicalRecordService {
                 ai.getRiskLevel());
 
         record.setPrecautions(
-                ai.getPrecautions());
+                String.valueOf(ai.getPrecautions()));
         return medicalRecordRepository.save(record);
 
     }

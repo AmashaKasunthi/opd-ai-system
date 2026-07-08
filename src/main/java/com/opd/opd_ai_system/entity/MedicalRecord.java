@@ -47,4 +47,5 @@ public class MedicalRecord {
     @Column(length = 2000)
     private String precautions;
 
+
 }
