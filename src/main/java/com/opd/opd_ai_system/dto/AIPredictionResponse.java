@@ -1,6 +1,5 @@
 package com.opd.opd_ai_system.dto;
 
-
 import lombok.Getter;
 import lombok.Setter;
 
