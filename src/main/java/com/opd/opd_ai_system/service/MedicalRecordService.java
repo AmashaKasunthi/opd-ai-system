@@ -49,12 +49,14 @@ public class MedicalRecordService {
         AIPredictionResponse ai =
                 aiService.predict(record.getSymptoms());
 
-        record.setPredictedDisease(ai.getDisease());
+        record.setPredictedDisease(
+                ai.getPredictedDisease());
 
-        record.setRiskLevel(ai.getRiskLevel());
+        record.setRiskLevel(
+                ai.getRiskLevel());
 
-        record.setPrecautions(ai.getPrecautions());
-
+        record.setPrecautions(
+                ai.getPrecautions());
         return medicalRecordRepository.save(record);
 
     }
