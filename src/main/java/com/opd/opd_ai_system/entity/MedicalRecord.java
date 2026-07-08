@@ -35,4 +35,14 @@ public class MedicalRecord {
     private String notes;
 
     private Integer weight;
+
+    // AI Result
+
+    private String predictedDisease;
+
+    private String riskLevel;
+
+    @Column(length = 2000)
+    private String precautions;
+
 }
