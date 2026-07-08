@@ -1,4 +1,5 @@
 package com.opd.opd_ai_system.service;
+import com.opd.opd_ai_system.dto.AIPredictionResponse;
 import com.opd.opd_ai_system.entity.MedicalRecord;
 import com.opd.opd_ai_system.entity.Patient;
 import com.opd.opd_ai_system.entity.User;
@@ -24,6 +25,9 @@ public class MedicalRecordService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private AIService aiService;
+
     // Add record
     public MedicalRecord addRecord(
             Integer patientId,
@@ -40,8 +44,22 @@ public class MedicalRecordService {
         record.setPatient(patient);
         record.setCreatedBy(user);
 
+        // AI Prediction
+
+        AIPredictionResponse ai =
+                aiService.predict(record.getSymptoms());
+
+        record.setPredictedDisease(ai.getDisease());
+
+        record.setRiskLevel(ai.getRiskLevel());
+
+        record.setPrecautions(ai.getPrecautions());
+
         return medicalRecordRepository.save(record);
+
     }
+
+
 
     // Get all records
     public List<MedicalRecord> getAllRecords(){
