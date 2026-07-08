@@ -3,7 +3,6 @@ package com.opd.opd_ai_system.service;
 import com.opd.opd_ai_system.dto.AIPredictionResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
 import java.util.HashMap;
 import java.util.Map;
 
