@@ -109,4 +109,11 @@ public class MedicalRecordService {
 
         return "Medical record not found";
     }
+    // Get latest medical record by patient
+    public MedicalRecord getLatestRecordByPatient(Integer patientId) {
+
+        return medicalRecordRepository
+                .findTopByPatientPatientIdOrderByRecordIdDesc(patientId);
+
+    }
 }

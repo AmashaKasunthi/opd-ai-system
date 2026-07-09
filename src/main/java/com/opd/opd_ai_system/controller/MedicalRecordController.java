@@ -37,6 +37,15 @@ public class MedicalRecordController {
         return medicalRecordService.getAllRecords();
     }
 
+    // Get latest medical record by patient
+    @GetMapping("/patient/{patientId}")
+    public MedicalRecord getLatestRecordByPatient(
+            @PathVariable Integer patientId) {
+
+        return medicalRecordService.getLatestRecordByPatient(patientId);
+
+    }
+
     // View one record
     @GetMapping("/{id}")
     public MedicalRecord getRecordById(
