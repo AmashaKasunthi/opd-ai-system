@@ -56,7 +56,8 @@ public class MedicalRecordService {
                 ai.getRiskLevel());
 
         record.setPrecautions(
-                String.valueOf(ai.getPrecautions()));
+                String.join("\n", ai.getPrecautions())
+        );
         return medicalRecordRepository.save(record);
 
     }
@@ -74,26 +75,41 @@ public class MedicalRecordService {
     }
 
     // Update record
+    // Update record
     public MedicalRecord updateRecord(
             Integer id,
-            MedicalRecord updatedRecord){
+            MedicalRecord updatedRecord) {
 
         MedicalRecord record =
                 medicalRecordRepository.findById(id).orElse(null);
 
-        if(record != null){
-
-            record.setSymptoms(updatedRecord.getSymptoms());
-            record.setBloodPressure(updatedRecord.getBloodPressure());
-            record.setTemperature(updatedRecord.getTemperature());
-            record.setHeartRate(updatedRecord.getHeartRate());
-            record.setNotes(updatedRecord.getNotes());
-            record.setWeight(updatedRecord.getWeight());
-
-            return medicalRecordRepository.save(record);
+        if (record == null) {
+            return null;
         }
 
-        return null;
+        // Update medical details
+        record.setSymptoms(updatedRecord.getSymptoms());
+        record.setBloodPressure(updatedRecord.getBloodPressure());
+        record.setTemperature(updatedRecord.getTemperature());
+        record.setHeartRate(updatedRecord.getHeartRate());
+        record.setWeight(updatedRecord.getWeight());
+        record.setNotes(updatedRecord.getNotes());
+
+        // Call AI again using updated symptoms
+        AIPredictionResponse ai = aiService.predict(record.getSymptoms());
+
+        // Update AI prediction fields
+        record.setPredictedDisease(ai.getPredictedDisease());
+        record.setRiskLevel(ai.getRiskLevel());
+
+        if (ai.getPrecautions() != null && !ai.getPrecautions().isEmpty()) {
+            record.setPrecautions(String.join("\n", ai.getPrecautions()));
+        } else {
+            record.setPrecautions("");
+        }
+
+        // Save updated record
+        return medicalRecordRepository.save(record);
     }
 
     // Delete record
