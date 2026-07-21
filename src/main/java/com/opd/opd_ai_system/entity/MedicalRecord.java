@@ -2,6 +2,9 @@ package com.opd.opd_ai_system.entity;
 
 import jakarta.persistence.*;
         import lombok.*;
+import java.time.LocalDateTime;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.util.List;
 
@@ -46,6 +49,14 @@ public class MedicalRecord {
 
     @Column(length = 2000)
     private String precautions;
+
+    @CreationTimestamp
+    @Column(name = "consultation_date", updatable = false)
+    private LocalDateTime consultationDate;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
 
 }

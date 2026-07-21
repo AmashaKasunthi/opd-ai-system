@@ -6,6 +6,7 @@ import com.opd.opd_ai_system.entity.User;
 import com.opd.opd_ai_system.repository.MedicalRecordRepository;
 import com.opd.opd_ai_system.repository.PatientRepository;
 import com.opd.opd_ai_system.repository.UserRepository;
+import java.time.LocalDateTime;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -45,24 +46,17 @@ public class MedicalRecordService {
         record.setCreatedBy(user);
 
         // AI Prediction
+        AIPredictionResponse ai = aiService.predict(record.getSymptoms());
 
-        AIPredictionResponse ai =
-                aiService.predict(record.getSymptoms());
-
-        record.setPredictedDisease(
-                ai.getPredictedDisease());
-
-        record.setRiskLevel(
-                ai.getRiskLevel());
+        record.setPredictedDisease(ai.getPredictedDisease());
+        record.setRiskLevel(ai.getRiskLevel());
 
         record.setPrecautions(
                 String.join("\n", ai.getPrecautions())
         );
+
         return medicalRecordRepository.save(record);
-
     }
-
-
 
     // Get all records
     public List<MedicalRecord> getAllRecords(){
@@ -74,7 +68,6 @@ public class MedicalRecordService {
         return medicalRecordRepository.findById(id).orElse(null);
     }
 
-    // Update record
     // Update record
     public MedicalRecord updateRecord(
             Integer id,
