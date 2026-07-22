@@ -40,7 +40,10 @@ public class ReportService {
         MonthlyReportDTO dto = new MonthlyReportDTO();
 
         dto.setTotalPatients(
-                (int) patientRepository.count()
+                (int) records.stream()
+                        .map(record -> record.getPatient().getPatientId())
+                        .distinct()
+                        .count()
         );
 
         dto.setTotalMedicalRecords(
@@ -91,7 +94,12 @@ public class ReportService {
 
         AnnualReportDTO dto = new AnnualReportDTO();
 
-        dto.setTotalPatients((int) patientRepository.count());
+        dto.setTotalPatients(
+                (int) records.stream()
+                        .map(record -> record.getPatient().getPatientId())
+                        .distinct()
+                        .count()
+        );
 
         dto.setTotalMedicalRecords(records.size());
 
