@@ -1,5 +1,6 @@
 package com.opd.opd_ai_system.controller;
 
+import com.opd.opd_ai_system.dto.AnnualReportDTO;
 import com.opd.opd_ai_system.dto.MonthlyReportDTO;
 import com.opd.opd_ai_system.service.ReportService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,13 @@ public class ReportController {
                 year,
                 month
         );
+
+    }
+    @GetMapping("/annual")
+    public AnnualReportDTO getAnnualReport(
+            @RequestParam int year){
+
+        return reportService.getAnnualReport(year);
 
     }
 
