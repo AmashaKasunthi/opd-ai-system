@@ -40,10 +40,16 @@ public class AuthController {
         );
     }
 
+    // NOTE: now takes the OTP too, not just email + newPassword. Without
+    // it, this endpoint could reset any account's password given only the
+    // email — verify-otp being a separate call doesn't stop someone from
+    // skipping straight to this one. See PasswordResetService.resetPassword,
+    // which re-checks the OTP server-side before allowing the change.
     @PostMapping("/reset-password")
     public String resetPassword(@RequestBody ResetPasswordRequest request) {
         return passwordResetService.resetPassword(
                 request.getEmail(),
+                request.getOtp(),
                 request.getNewPassword()
         );
     }
