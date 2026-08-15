@@ -76,4 +76,6 @@ public class AdminController {
         adminService.deleteUser(id);
         return "User deleted successfully";
     }
+
+
 }
