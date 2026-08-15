@@ -1,19 +1,27 @@
 package com.opd.opd_ai_system.service;
 
+import com.opd.opd_ai_system.entity.Admin;
 import com.opd.opd_ai_system.entity.User;
+import com.opd.opd_ai_system.repository.AdminRepository;
 import com.opd.opd_ai_system.repository.UserRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
+import java.time.Instant;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class PasswordResetService {
+
+    @Autowired
+    private AdminRepository adminRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -21,62 +29,231 @@ public class PasswordResetService {
     @Autowired
     private JavaMailSender mailSender;
 
-    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+    private final BCryptPasswordEncoder encoder =
+            new BCryptPasswordEncoder();
 
-    // store OTP temporarily (simple version)
-    private Map<String, String> otpStorage = new HashMap<>();
+    private static final long OTP_TTL_MILLIS = 10 * 60 * 1000;
+    private static final int MAX_ATTEMPTS = 5;
 
-    // STEP 1: send OTP
-    public String sendOtp(String email) {
+    private final Map<String, OtpEntry> otpStorage =
+            new ConcurrentHashMap<>();
 
-        User user = userRepository.findByEmail(email);
+    private static class OtpEntry {
 
-        if (user == null) {
-            return "User not found";
+        String otp;
+        long expiresAt;
+        int attempts;
+
+        OtpEntry(String otp, long expiresAt) {
+            this.otp = otp;
+            this.expiresAt = expiresAt;
+            this.attempts = 0;
         }
 
-        String otp = String.valueOf(100000 + new Random().nextInt(900000));
-
-        otpStorage.put(email, otp);
-
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(email);
-        message.setSubject("OPD Password Reset OTP");
-        message.setText("Your OTP is: " + otp);
-
-        mailSender.send(message);
-
-        return "OTP sent successfully";
+        boolean isExpired() {
+            return Instant.now().toEpochMilli() > expiresAt;
+        }
     }
 
-    // STEP 2: verify OTP
-    public String verifyOtp(String email, String otp) {
+    // =====================================================
+    // STEP 1 - SEND OTP
+    // =====================================================
 
-        if (!otpStorage.containsKey(email)) {
+    public String sendOtp(String email) {
+
+        // First check Admin table
+        Optional<Admin> admin =
+                adminRepository.findByEmail(email);
+
+        // Then check Users table
+        Optional<User> user =
+                userRepository.findByEmail(email);
+
+        if (admin.isPresent() || user.isPresent()) {
+
+            String otp = String.valueOf(
+                    100000 + new Random().nextInt(900000)
+            );
+
+            long expiresAt =
+                    Instant.now().toEpochMilli()
+                            + OTP_TTL_MILLIS;
+
+            otpStorage.put(
+                    email,
+                    new OtpEntry(otp, expiresAt)
+            );
+
+            SimpleMailMessage message =
+                    new SimpleMailMessage();
+
+            message.setTo(email);
+            message.setSubject(
+                    "OPD AI System - Password Reset OTP"
+            );
+
+            message.setText(
+                    "Your password reset OTP is: "
+                            + otp
+                            + "\n\n"
+                            + "This OTP will expire in 10 minutes."
+                            + "\n\n"
+                            + "If you did not request a password reset, "
+                            + "please ignore this email."
+            );
+
+            try {
+
+                mailSender.send(message);
+
+                System.out.println(
+                        "OTP sent successfully to: " + email
+                );
+
+            } catch (Exception ex) {
+
+                System.err.println(
+                        "Failed to send OTP: "
+                                + ex.getMessage()
+                );
+
+                ex.printStackTrace();
+
+                // Remove OTP if email failed
+                otpStorage.remove(email);
+
+                throw new RuntimeException(
+                        "Unable to send OTP email."
+                );
+            }
+        }
+
+        // Generic response
+        return "If that email is registered, an OTP has been sent.";
+    }
+
+    // =====================================================
+    // STEP 2 - VERIFY OTP
+    // =====================================================
+
+    public String verifyOtp(
+            String email,
+            String otp) {
+
+        OtpEntry entry =
+                otpStorage.get(email);
+
+        if (entry == null) {
             return "OTP expired or not found";
         }
 
-        if (otpStorage.get(email).equals(otp)) {
+        if (entry.isExpired()) {
+
+            otpStorage.remove(email);
+
+            return "OTP expired or not found";
+        }
+
+        if (entry.attempts >= MAX_ATTEMPTS) {
+
+            otpStorage.remove(email);
+
+            return "Too many attempts. Request a new OTP.";
+        }
+
+        if (entry.otp.equals(otp)) {
+
             return "OTP verified";
         }
+
+        entry.attempts++;
 
         return "Invalid OTP";
     }
 
-    // STEP 3: reset password
-    public String resetPassword(String email, String newPassword) {
+    // =====================================================
+    // STEP 3 - RESET PASSWORD
+    // =====================================================
 
-        User user = userRepository.findByEmail(email);
+    public String resetPassword(
+            String email,
+            String otp,
+            String newPassword) {
 
-        if (user == null) {
-            return "User not found";
+        OtpEntry entry =
+                otpStorage.get(email);
+
+        if (entry == null || entry.isExpired()) {
+
+            otpStorage.remove(email);
+
+            return "Unable to reset password. Please request a new OTP.";
         }
 
-        user.setPassword(encoder.encode(newPassword));
-        userRepository.save(user);
+        if (entry.attempts >= MAX_ATTEMPTS) {
 
-        otpStorage.remove(email);
+            otpStorage.remove(email);
 
-        return "Password reset successful";
+            return "Unable to reset password. Please request a new OTP.";
+        }
+
+        if (!entry.otp.equals(otp)) {
+
+            entry.attempts++;
+
+            return "Unable to reset password. Please request a new OTP.";
+        }
+
+        if (newPassword == null ||
+                newPassword.length() < 8) {
+
+            return "Password must be at least 8 characters.";
+        }
+
+        // =================================================
+        // CHECK ADMIN
+        // =================================================
+
+        Optional<Admin> admin =
+                adminRepository.findByEmail(email);
+
+        if (admin.isPresent()) {
+
+            Admin adminEntity = admin.get();
+
+            adminEntity.setPassword(
+                    encoder.encode(newPassword)
+            );
+
+            adminRepository.save(adminEntity);
+
+            otpStorage.remove(email);
+
+            return "Password reset successful";
+        }
+
+        // =================================================
+        // CHECK DOCTOR / NURSE
+        // =================================================
+
+        Optional<User> user =
+                userRepository.findByEmail(email);
+
+        if (user.isPresent()) {
+
+            User userEntity = user.get();
+
+            userEntity.setPassword(
+                    encoder.encode(newPassword)
+            );
+
+            userRepository.save(userEntity);
+
+            otpStorage.remove(email);
+
+            return "Password reset successful";
+        }
+
+        return "Unable to reset password.";
     }
 }
