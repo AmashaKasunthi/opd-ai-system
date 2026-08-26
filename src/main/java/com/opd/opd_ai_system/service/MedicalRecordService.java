@@ -63,9 +63,27 @@ public class MedicalRecordService {
         return medicalRecordRepository.findAll();
     }
 
-    // Get record by ID
-    public MedicalRecord getRecordById(Integer id){
-        return medicalRecordRepository.findById(id).orElse(null);
+    // ============================================================
+    // GET ALL MEDICAL RECORDS FOR ONE PATIENT
+    // ============================================================
+
+    public List<MedicalRecord> getAllRecordsByPatient(
+            Integer patientId) {
+
+        return medicalRecordRepository
+                .findByPatientPatientIdOrderByRecordIdDesc(patientId);
+    }
+
+
+    // ============================================================
+    // GET ONE MEDICAL RECORD BY ID
+    // ============================================================
+
+    public MedicalRecord getRecordById(Integer id) {
+
+        return medicalRecordRepository
+                .findById(id)
+                .orElse(null);
     }
 
     // Update record
