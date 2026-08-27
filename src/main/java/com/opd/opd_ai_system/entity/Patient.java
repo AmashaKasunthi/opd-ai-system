@@ -24,7 +24,7 @@ public class Patient {
 
     private String gender;
 
-    private String contactNumber;
+    private Integer contactNumber;
 
     private String address;
 

@@ -27,7 +27,7 @@ public class User {
 
     private String specialization;
 
-    private String contactNumber;
+    private Integer contactNumber;
 
 
 }
